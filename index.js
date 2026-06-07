@@ -40,6 +40,14 @@ async function run() {
         const database = client.db("hireloop_db");
         const jobCollection = database.collection("jobs");
         const companyCollection = database.collection("companies");
+ const usersCollection = database.collection("user");
+
+         app.get('/api/users', async (req, res) => {
+            
+            const cursor = usersCollection.find().skip(6);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
 
 
         // jobs api
@@ -59,6 +67,15 @@ async function run() {
         app.post('/api/jobs', async (req, res) => {
             const job = req.body;
             const result = await jobCollection.insertOne(job);
+            res.send(result);
+        })
+
+          app.get('/api/jobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: new ObjectId(id)
+            }
+            const result = await jobCollection.findOne(query);
             res.send(result);
         })
 
