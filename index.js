@@ -42,7 +42,10 @@ async function run() {
         const companyCollection = database.collection("companies");
         const usersCollection = database.collection("users");
          const applicationsCollection = database.collection("applications");
-const planCollection = database.collection('plans');
+         const planCollection = database.collection('plans');
+
+
+
          app.get('/api/users', async (req, res) => {
             
             const cursor = usersCollection.find();
@@ -71,15 +74,23 @@ const planCollection = database.collection('plans');
             res.send(result);
         })
 
-          app.get('/api/jobs/:id', async (req, res) => {
-            const id = req.params.id;
-            console.log(req.params.id);
-            const query = {
-                _id: new ObjectId(id)
-            }
-            const result = await jobCollection.findOne(query);
-            res.send(result);
-        })
+app.get('/api/jobs/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await jobCollection.findOne(query);
+
+        if (!result) {
+            return res.status(404).json({ error: "Job not found" });
+        }
+
+        res.json(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
    // application related apis
         app.get('/api/applications', async (req, res) => {
@@ -109,6 +120,7 @@ const planCollection = database.collection('plans');
         // plans 
         app.get('/api/plans', async (req, res) => {
             const query = {}
+            console.log(req.query)
             if (req.query.plan_id) {
                 query.id = req.query.plan_id
             }
