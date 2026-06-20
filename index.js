@@ -42,9 +42,12 @@ async function run() {
         const companyCollection = database.collection("companies");
         const usersCollection = database.collection("users");
         const applicationsCollection = database.collection("applications");
+        const planCollection = database.collection('plans');
+        const subscriptionCollection = database.collection('subscriptions');
+
         app.get('/api/users', async (req, res) => {
-            
-            const cursor = usersCollection.find();
+
+            const cursor = usersCollection.find().skip(6);
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -81,8 +84,7 @@ async function run() {
             res.send(result);
         })
 
-
- // application related apis
+        // application related apis
         app.get('/api/applications', async (req, res) => {
             const query = {};
             if (req.query.applicantId) {
@@ -106,11 +108,9 @@ async function run() {
             res.send(result);
         })
 
-
         // company related apis
-
         app.get('/api/companies', async (req, res) => {
-            const cursor = companyCollection.find();
+            const cursor = companyCollection.find().skip(4);
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -136,6 +136,38 @@ async function run() {
             res.send(result);
         })
 
+        // plans 
+        app.get('/api/plans', async (req, res) => {
+            const query = {}
+            if (req.query.plan_id) {
+                query.id = req.query.plan_id
+            }
+            const plan = await planCollection.findOne(query);
+            res.send(plan)
+        })
+
+        // subscription 
+        app.post('/api/subscriptions', async (req, res) => {
+            const data = req.body;
+            const subsInfo = {
+                ...data,
+                createdAt: new Date()
+            }
+
+            const result = await subscriptionCollection.insertOne(subsInfo);
+
+            // update the user plan information
+            const filter = { email: data.email };
+            // update the value of the 'quantity' field to 5
+            const updateDocument = {
+                $set: {
+                    plan: data.planId,
+                },
+            };
+
+            const updateResult = await usersCollection.updateOne(filter, updateDocument);
+            res.send(updateResult)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
